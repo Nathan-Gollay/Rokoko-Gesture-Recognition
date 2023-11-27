@@ -1,5 +1,6 @@
 """
-Node of finger bone tree struction
+Node of finger bone tree structure
+
 Author: Nathan Gollay
 """
 class FingerNode:

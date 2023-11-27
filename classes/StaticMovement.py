@@ -26,8 +26,6 @@ class StaticMovement:
         self.hand_rotation = None
         self.skeleton = None
         
-
-
         self.rotations_array_quat = []
 
         self.hand_finger_angle_averages = None
@@ -80,10 +78,8 @@ class StaticMovement:
                 self.rotations_array_quat.append(new_quat_row)
 
             
-
-
     def eulerToQuaternion(self, flat_euler_array):
-        # New function, untested
+        # Takes euler array and converst to list of quaternions
         num_bones = len(euler_array)//3
         euler_array = np.reshape(flat_euler_array, (num_bones, 3))
         quaternions = R.from_euler('xyz', euler_array).as_quat()
@@ -165,6 +161,7 @@ class StaticMovement:
             self.hand_rotation = self.rotation_averages[6:9]
      
     def setMetacarpalDependencies(self, skeleton):
+        # Sets metacarpal relations
         for i, finger_one in enumerate(skeleton.finger_hierarchy_root.next_bones):
             for j, finger_two in enumerate(skeleton.finger_hierarchy_root.next_bones[i+1:]):
                 finger_average_one = self.rotation_averages_quat[finger_one.index]
@@ -172,8 +169,8 @@ class StaticMovement:
                 relation = quaternionAngleDifference(finger_average_one, finger_average_two)
                 self.metacarpal_average_relations.append(relation)
 
-    def rotationIsolation(self, rotations):
-        #Currently obsolete. Will modify infuture to isolate location instead
+    def locationIsolation(self, rotations):
+        #Currently broken. Will modify infuture to isolate location instead
         rotation_change = [0.0, 0.0, 0.0]
         i = 0
         for average, current in zip(self.hand_rotation, rotations[6:9]):
@@ -186,8 +183,8 @@ class StaticMovement:
         return rotations
 
     def nearestNeighbor(self, skeleton):
-        # Poor Approximation of nearest neighbor 
-        # Do not use for rotation- update to handle location (tech debt)
+        # Poor Approximation of nearest neighbor. Use only on location data
+
         raise Exception("Function not in working order. Refactor to handle location instead")
         self.skeleton = skeleton
         gesture = True
@@ -208,7 +205,7 @@ class StaticMovement:
         print(f'\rStatus: {status}', end='')
        
     def calculateAngleAverages(self):
-
+        # Calculates angle between hand and finger. Only use for non local rotations
         self.hand_finger_angle_averages = [0.0] * len(self.rotation_averages_quat)
         for i, finger_quat in enumerate(self.rotation_averages_quat[3:]):
             self.hand_finger_angle_averages[i+3] = quaternionAngleDifference(self.rotation_averages_quat[2], finger_quat)

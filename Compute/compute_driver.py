@@ -33,12 +33,13 @@ def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushe
     skeleton.printFingerGroups() 
     alphabet = string.ascii_uppercase
 
+    """
     mouse = MouseController(skeleton = skeleton)
     mouse.calibrateMouse()
     while True:
         print("\nNormalized: ",mouse.getMousePosition())
         time.sleep(.5)
-
+    """
     signs = SignLanguage("Nathan", record_button_pushed, recording_name_conn)
     #signs.record(skeleton, letters = ['_'])
     signs.loadRecordings(letters = ['_', '-', '+', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'])

@@ -70,24 +70,6 @@ def quatToRotation(quat_array):
         quaternions.append(R.from_quat(quat))
     return quaternions
 
-"""
-def quaternionAverage(quaternion_array):
-    # Function to average a set of quaternions. quaternion_array of shape (num_frames, num_bones, 4)
-    quat_sums = np.zeros_like(quaternion_array[0]) # Average array 
-    num_frames = 0
-    for quats in quaternion_array:
-        for bone_index, quat in enumerate(quats):
-            if np.dot(quat_sums[bone_index], quat) < 0:
-                quat = -quat
-            quat_sums[bone_index] += quat
-        num_frames += 1
-
-    # This is the averaging method for quaternions
-    for bone_index, quat_sum in enumerate(quat_sums):
-        quat_sums[bone_index] = quat_sum/np.linalg.norm(quat_sum)
-    
-    return quat_sums
-"""
 def quaternionAverage(frames):
     # Determine the number of bones by looking at the first frame
     num_bones = len(frames[0])
@@ -113,18 +95,6 @@ def quaternionAverage(frames):
     average_rotations = [R.from_quat(quat_sum / np.linalg.norm(quat_sum)) for quat_sum in quat_sums]
 
     return average_rotations
-def getChildRotations(children, avg_parent, current_parent):
-    # Currently Obsolete. Replaced by getFingerHierarchy in StaticMovement class
-    i = 0
-    new_children = [0.0]*len(children)
-    while i < len(children) - 1:
-        new_rotation = childRotation(avg_parent, current_parent, list([children[i], children[i+1], children[i+2]]))
-        new_children[i] = new_rotation[0]
-        new_children[i+1] = new_rotation[1]
-        new_children[i+2] = new_rotation[2]
-        i = i +3
-        
-    return new_children
 
 def angleDifference(angle1, angle2):
     # Compute the difference
@@ -168,14 +138,3 @@ def rotListToQuatList(rot_list):
         quat_list.append(rot.as_quat())
     return np.concatenate(quat_list)
 
-# Example usage:
-# Let's say the parent's old rotation is [1, 0, 0, 0] (no rotation),
-# the parent's new rotation is a quaternion that represents a 90-degree rotation around the z-axis,
-# and the child's old rotation is a quaternion that represents a 45-degree rotation around the y-axis.
-#parent_old = [1, 0, 0, 0]
-#parent_new = [np.sqrt(2)/2, 0, 0, np.sqrt(2)/2]
-##child_old = [np.sqrt(2)/2, 0, np.sqrt(2)/2, 0]
-
-# Calculate the new child rotation
-#child_new = new_child_rotation(parent_old, parent_new, child_old)
-#print("New child rotation (as quaternion):", child_new)

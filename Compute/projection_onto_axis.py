@@ -1,4 +1,3 @@
-#def trackLeftRight()
 import time
 from scipy.spatial.transform import Rotation as R
 
