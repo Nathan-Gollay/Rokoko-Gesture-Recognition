@@ -106,22 +106,8 @@ class Skeleton:
                 print("-> ", curr.name, end = " ")
             print("\n", end = " ")
 
-    def getActiveBones(self):
-        # Currently Obsolete in favor of similar fucniton in Blender Script
-        # If Rokoko works will use this
-        active_bones = []
-        for i in range(5):
-            time.sleep(1)
-            new_pose = getPose()['parameters']
-            for bone_prev, bone_new in zip(self.pose, new_pose):
-                print(bone_prev)
-                print(bone_new)
-                if bone_prev != bone_new:
-                    active_bones.append(bone_prev)
-            self.pose = new_pose
-
     def printOut(self):
-        # Currently obsolete. If Rokok API fixed, will be used
+        # Prints Skeleton Info
         print("\nPOSE DEFINITION:\n")
         print(self.pose_definition)
 
@@ -158,7 +144,7 @@ class Skeleton:
                 self.bone_rotations_quat[i] = pose[i]
             
 
-    def update(self, pose_array):
+    def updateWithBlender(self, pose_array):
         # Function to read values from Sample Process
         # If first data received
         if not self.num_bones: 

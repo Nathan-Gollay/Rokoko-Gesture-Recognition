@@ -1,8 +1,7 @@
 """
 Library of API Calls
-Aurthors: Nathan Gollay, Rokoko
 
-CURRENTLY OBSOLETE
+Authors: Nathan Gollay, Rokoko
 """
 
 import requests
@@ -16,9 +15,8 @@ COMMAND_POSE = 'pose'
 COMMAND_INFO = 'info'
 COMMAND_LIVESTREAM = 'livestream'
 
-""" Currently Obsolete Until Rokoko Fixes thier API""" 
 def getPose():
-    
+    # Function for accessing pose information of Rokoko's api
     response = None
     try:
         response = requests.post(f"http://{IP_ADDRESS}:{PORT}/v2/{API_KEY}/{COMMAND_POSE}",

@@ -13,6 +13,7 @@ from classes.Skeleton import *
 from Compute.rotations import *
 
 def metacarpalFingerDependencies(static_movement, skeleton):
+    # Compares relation between metacarpals to average metacarpal relation of pose
     try:
         current_quats = quatToRotation(skeleton.getBoneRotations())
         #current_quats = np.array(rotListToQuatList(current_quats))
@@ -83,8 +84,6 @@ def euclideanDistance(array1, array2):
     return total
 
 
-    
-
 def nearestNeighbor(skeleton, class_average_quats):
     current_quat_array = quatToRotation(skeleton.getBoneRotations())
     min_distance = 100000
@@ -117,7 +116,7 @@ def nearestNeighbor(skeleton, class_average_quats):
 
 def angleAverageComparison(static_movement, skeleton, angle_averages):
     # Simple case. Compares average angle of hand to finger to current hand and finger angle
-   
+    # For use in non-localized roation data
     current_rotations = eulerToQuaternion(skeleton.getBoneRotations())
     static_movement.calculateAngleAverages()
     average_angles = angle_averages[3:]
