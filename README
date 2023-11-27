@@ -1,0 +1,27 @@
+Hello.
+
+This library is meant to outfit Rokoko Motion Capture Gloves for gesture recogntion.
+Currently, Rokoko's api is broken, so the work-around is livestreaming the skeleton data
+from Rokoko Studio to Blender and sampling from there. 
+
+There is a Blender project included here called 'blend_send.blend' with a script that creates 
+a socket to continuously send data over. There is also the default Rokoko skeleton imported 
+and ready to go. 
+
+To run the the project in its current state, set up Rokoko to livestream to Blender using the normal 
+videos and tutorials provided by Rokoko. The motion should map from Rokoko onto the skeleton 
+in Blender. Also note, it is best to run Blender from command line as that is where its stdout
+will go. To run the program, first navigate in another terminal window to the gesture directory 
+and then run with "python3 driver.py". 
+
+There should then be a message along the lines of "Server started and waiting." This is in 
+reference to waitng for the values to start streaming in from Blender. Run the script named
+"operator_modal_timer.py" in Blender.
+
+Current fucntionality is changing rapidly but is at this time adapted for use with the right 
+glove only, though this is easily changeable and is only done for simplicity in the short run. 
+There is a gui available but is in development. Any gesture recogntion works but may be unstable 
+due to rapid iteration. 
+
+Yours in Coding, 
+Nathan Gollay
