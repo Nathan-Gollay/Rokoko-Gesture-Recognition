@@ -34,6 +34,7 @@ def main():
     skeleton_ready = Value('i', 0)
     shutdown = Value('i', 0)
     sensitivity_slider = Value('i', 0)
+    compute_mode = Value('i', 0)
     
     # Pipes
     pose_name_parent_conn, pose_name_child_conn = Pipe()
@@ -59,7 +60,7 @@ def main():
     COMSUMER_PROCESS.start()
     
     # Video Player
-    VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, "hike.mp4", shutdown))
+    VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, "beach.mp4", shutdown))
     VIDEO_PROCESS.start()
     video_parent_conn.send("1")
     

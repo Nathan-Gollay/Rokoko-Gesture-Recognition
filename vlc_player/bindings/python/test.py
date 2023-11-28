@@ -428,7 +428,8 @@ class AppVLC(App):
             self.Toggle.title = 'Play'  # item.title = 'Play'
     
     def sampleViewpoint(self):
-        self.player.pause()
+        self.window.full = True
+        #self.player.pause()
         print("in fucntion")
         start_time = time.time()
         frames = 0
@@ -439,9 +440,10 @@ class AppVLC(App):
             new_pitch = None
             #while not new_viewpoint or not new_pitch: #and not new_pitch:
             new_viewpoint = self.pipe.recv() # Receiving pose name from pipe
-            new_pitch = self.pipe2.recv()
+            #new_pitch = self.pipe2.recv()
             #new_viewpoint = 0.0
             if new_viewpoint != None:
+                print("receive")
                 new_viewpoint = float(new_viewpoint)
                 self.viewpoint.contents.yaw = new_viewpoint
             if new_pitch != None:
