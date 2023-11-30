@@ -42,6 +42,7 @@ def averageRotationComparison(static_movement, skeleton, return_total = False):
         current_quats = quatToRotation(skeleton.getBoneRotations())
         average_quats = static_movement.rotation_averages_quat
     except:
+        print("wtf\n\n\n\n\n")
         return 100
     gesture = True
     i = 0
@@ -64,7 +65,7 @@ def averageRotationComparison(static_movement, skeleton, return_total = False):
         i += 1
     if gesture:
         return True
-        status = "closed"
+        status = ("closed")
     else:
         return False
         status = "open"

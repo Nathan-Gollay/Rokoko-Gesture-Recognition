@@ -30,13 +30,27 @@ class MouseController:
         self.right_length = None
 
         self.pointer_pose = None
+        """
         if load_pointer:
             self.loadPointerPose()
         else:
             self.setPointerPose()
+        """
         
-    
-    def getMousePosition(self):
+    def getMousePositionAxis(self):
+       # x_lower = axisDistance(self.lower_left_quat, self.lower_right_quat, self.skeleton)
+        #x_upper = axisDistance(self.upper_left_quat, self.upper_right_quat, self.skeleton)
+
+        #y_left = axisDistance(self.lower_left_quat, self.upper_left_quat, self.skeleton)
+        #y_right = axisDistance(self.lower_right_quat, self.upper_right_quat, self.skeleton)
+
+        x =  axisDistance(self.upper_left_quat, self.upper_right_quat, self.skeleton)
+        y =  axisDistance(self.lower_left_quat, self.lower_right_quat, self.skeleton)
+
+        return (x, y)
+        #return ((x_lower + x_upper)/2, (y_left + y_right)/2)
+
+    def getMousePositionTrig(self):
         current_quat = quatToRotation(self.skeleton.getBoneRotations())[2]
         
 
@@ -75,9 +89,11 @@ class MouseController:
         pass
 
     def setPointerPose(self):
+        time.sleep(2)
         self.pointer_pose = StaticMovement(name = "pointer", load = False)
         self.pointer_pose.record(skeleton = self.skeleton, num_seconds = 3, fps = 30, 
             location = False, rotation = True, save = False)
+        
         print(" Done Recording.\n")
     
     def calibrateMouse(self):
@@ -88,7 +104,7 @@ class MouseController:
             location = False, rotation = True, save = False)
         print(" Done Recording.\n")
         pose.rotation_averages_quat = quaternionAverage(pose.rotations_array_quat)
-        self.upper_left_quat = pose.rotation_averages_quat[2]
+        self.upper_left_quat = pose.rotation_averages_quat[1]
 
         print("\nPoint to the upper right corner")
         time.sleep(1)
@@ -96,7 +112,7 @@ class MouseController:
             location = False, rotation = True, save = False)
         print(" Done Recording.\n")
         pose.rotation_averages_quat = quaternionAverage(pose.rotations_array_quat)
-        self.upper_right_quat = pose.rotation_averages_quat[2]
+        self.upper_right_quat = pose.rotation_averages_quat[1]
 
         print("\nPoint to the lower left corner")
         time.sleep(1)
@@ -104,7 +120,7 @@ class MouseController:
             location = False, rotation = True, save = False)
         print(" Done Recording.\n")
         pose.rotation_averages_quat = quaternionAverage(pose.rotations_array_quat)
-        self.lower_left_quat = pose.rotation_averages_quat[2]
+        self.lower_left_quat = pose.rotation_averages_quat[1]
 
         print("\nPoint to the lower right corner")
         time.sleep(1)
@@ -112,7 +128,7 @@ class MouseController:
             location = False, rotation = True, save = False)
         print(" Done Recording.\n")
         pose.rotation_averages_quat = quaternionAverage(pose.rotations_array_quat)
-        self.lower_right_quat = pose.rotation_averages_quat[2]
+        self.lower_right_quat = pose.rotation_averages_quat[1]
 
         self.calculateIntermediateValues()
 

@@ -32,7 +32,7 @@ class SignLanguage:
         if self.load:
             self.load_recordings()
     
-    def runAverageAngleComparison(self, skeleton, push_keys = False):
+    def runAverageAngleComparison(self, skeleton, push_keys = True):
         alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y']
         dir_path = "./Sign_Language_Recordings/" + self.unique_identifier
 

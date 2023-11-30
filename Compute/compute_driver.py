@@ -7,6 +7,7 @@ Author: Nathan Gollay
 import time
 import multiprocessing
 import string
+from threading import Thread
 
 # Internal Files
 from classes.Skeleton import Skeleton
@@ -16,7 +17,7 @@ from Compute.pose_detection_algorithms import *
 from Compute.projection_onto_axis import *
 from classes.SignLanguage import SignLanguage
 from classes.MouseController import MouseController
-
+from pynput.mouse import Button, Controller
 
 def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
@@ -35,8 +36,9 @@ def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushe
 
     mode = 2
     if mode == 1:
-        mouseControl(skeleton)
-
+        mouseControl(skeleton, sensitivity_slider)
+    if mode == 2: 
+        mouseAndSignLanguage(skeleton, sensitivity_slider, record_button_pushed, recording_name_conn)
     
     left_end, right_end, up_end, bottom_end = dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
@@ -55,9 +57,9 @@ def runSignLanguage(skeleton, record_button_pushed, recording_name_conn):
     signs = SignLanguage("Nathan", record_button_pushed, recording_name_conn)
     signs.loadRecordings(letters = ['_', '-', '+', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'])
 
-    signs.runAverageAngleComparison(skeleton, push_keys = True)
+    signs.runAverageAngleComparison(skeleton, push_keys = True) 
 
-def dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+def videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
         shutdown, sensitivity_slider, recording_name_conn, bone_name_conn, left_end, right_end, up_end, down_end):
     lock = multiprocessing.Lock()
@@ -159,7 +161,7 @@ def dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, l
                     was_closed = False
             time.sleep(.01)
 
-def dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+def videoDragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
         shutdown, sensitivity_slider, recording_name_conn, bone_name_conn):
     lock = multiprocessing.Lock()
@@ -252,14 +254,89 @@ def dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, l
                 else: 
                     was_closed = False
 
-def mouseControl(skeleton):
+def mouseControl(skeleton, sensitivity_slider):
     # Function to control mouse pointer with glove
     mouse = MouseController(skeleton = skeleton)
+    #mouse.setPointerPose()
     mouse.calibrateMouse()
-    while True:
-        print("\nNormalized: ",mouse.getMousePosition())
-        time.sleep(.5)
+    Mouse = Controller()
+    old_y = 300.0
+    old_x = 400.0
+    
+    movement1 = StaticMovement(name = "1", load = False)
+    movement1.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = True, rotation = True, save = False)
+    print(" Done Recording.\n")
+    movement1.rotation_averages_quat = quaternionAverage(movement1.rotations_array_quat)
+    movement1.calculateAngleAverages()
+    time.sleep(1)
 
+    movement2 = StaticMovement(name = "1", load = False)
+    movement2.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = True, rotation = True, save = False)
+    print(" Done Recording.\n")
+    movement2.rotation_averages_quat = quaternionAverage(movement2.rotations_array_quat)
+    movement2.calculateAngleAverages()
+    while True:
+        #print("\nNormalized: ", mouse.getMousePositionAxis())
+        is_pointer = averageRotationComparison(movement1, skeleton)
+        is_click = averageRotationComparison(movement2, skeleton)
+        if is_pointer:
+            x, y = mouse.getMousePositionAxis()
+            #print(old_x - x, old_y - y)
+            Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+            old_x = x
+            old_y = y
+            time.sleep(.05)
+        if is_click:
+            Mouse.click(Button.left, 1) 
+            time.sleep(2) 
+
+def mouseAndSignLanguage(skeleton, sensitivity_slider, record_button_pushed, recording_name_conn):    
+    # Function to control mouse pointer with glove
+    
+    alphabet = string.ascii_uppercase
+    signs = SignLanguage("Nathan", record_button_pushed, recording_name_conn)
+    signs.loadRecordings(letters = ['_', '-', '+', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'])
+    sign_thread = Thread(target=signs.runAverageAngleComparison, args =(skeleton,))
+    
+    
+    mouse = MouseController(skeleton = skeleton)
+    #mouse.setPointerPose()
+    mouse.calibrateMouse()
+    Mouse = Controller()
+    old_y = 300.0
+    old_x = 400.0
+    
+    movement1 = StaticMovement(name = "1", load = False)
+    movement1.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = True, rotation = True, save = False)
+    print(" Done Recording.\n")
+    movement1.rotation_averages_quat = quaternionAverage(movement1.rotations_array_quat)
+    movement1.calculateAngleAverages()
+    time.sleep(1)
+
+    movement2 = StaticMovement(name = "1", load = False)
+    movement2.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = True, rotation = True, save = False)
+    print(" Done Recording.\n")
+    movement2.rotation_averages_quat = quaternionAverage(movement2.rotations_array_quat)
+    movement2.calculateAngleAverages()
+    
+    sign_thread.start()
+
+    while True:
+        #print("\nNormalized: ", mouse.getMousePositionAxis())
+        is_pointer = averageRotationComparison(movement1, skeleton)
+        is_click = averageRotationComparison(movement2, skeleton)
+        if is_pointer:
+            x, y = mouse.getMousePositionAxis()
+            #print(old_x - x, old_y - y)
+            Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+            old_x = x
+            old_y = y
+            time.sleep(.05)
+        if is_click:
+            Mouse.click(Button.left, 1) 
+            time.sleep(2) 
+  
+    
 
     
    
