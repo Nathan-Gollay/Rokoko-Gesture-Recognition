@@ -23,7 +23,7 @@ class SliderDemo(QWidget):
         self.initialize_ui()
         self.record_button_pushed = record_button_pushed
         self.save_button_pushed = save_button_pushed
-        self.load_button_pushed = load_button_pushed
+        self.mode_button_pushed = load_button_pushed
         self.lock = multiprocessing.Lock()
 
         self.identifier_conn = identifier_name_parent_conn
@@ -66,7 +66,7 @@ class SliderDemo(QWidget):
         button_layout.addLayout(button2_layout)
         
         button3_layout = QVBoxLayout()
-        self.button3 = QPushButton('Load')
+        self.button3 = QPushButton('Mode')
         self.button3.clicked.connect(self.on_button3_clicked)
         button3_layout.addWidget(self.button3)
 
@@ -180,7 +180,7 @@ class SliderDemo(QWidget):
         # Placeholder for button 2 functionality
         print("Button 3 was clicked!")
         with self.lock:
-            self.load_button_pushed.value = 1
+            self.mode_button_pushed.value = 1
 
 
 

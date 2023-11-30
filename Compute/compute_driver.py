@@ -37,13 +37,18 @@ def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushe
     if mode == 1:
         mouseControl(skeleton)
 
-    if mode == 2:
-        dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
-            pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
-            shutdown, sensitivity_slider, recording_name_conn, bone_name_conn)
+    
+    left_end, right_end, up_end, bottom_end = dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+        pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
+        shutdown, sensitivity_slider, recording_name_conn, bone_name_conn)
 
-    if mode == 3:
-        runSignLanguage(skeleton, record_button_pushed, recording_name_conn)
+    dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+        pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
+        shutdown, sensitivity_slider, recording_name_conn, bone_name_conn, left_end, right_end, up_end, 
+        bottom_end)
+
+    runSignLanguage(skeleton, record_button_pushed, recording_name_conn)
+
 
 def runSignLanguage(skeleton, record_button_pushed, recording_name_conn):
     alphabet = string.ascii_uppercase
@@ -54,14 +59,14 @@ def runSignLanguage(skeleton, record_button_pushed, recording_name_conn):
 
 def dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
-        shutdown, sensitivity_slider, recording_name_conn, bone_name_conn):
+        shutdown, sensitivity_slider, recording_name_conn, bone_name_conn, left_end, right_end, up_end, down_end):
     lock = multiprocessing.Lock()
     while True:
         time.sleep(2)
-        left_end, right_end = determine_rotation_axis(skeleton)
+        #left_end, right_end = determine_rotation_axis(skeleton)
             
-        time.sleep(2)
-        up_end, down_end = determine_rotation_axis(skeleton)
+        #time.sleep(2)
+        #up_end, down_end = determine_rotation_axis(skeleton)
 
         time.sleep(2)
         closed_fist = StaticMovement(name = "closed", load = False)
@@ -81,6 +86,10 @@ def dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, l
         while True:
             if shutdown.value == 1:
                 return
+
+            if load_button_pushed.value == 1:
+                load_button_pushed.value = 0
+                return 
 
             if record_button_pushed.value == 1:
                 print("recieved")
@@ -120,24 +129,124 @@ def dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, l
                 if is_closed and was_closed:
                     new_yaw = axisDistance(left_end, right_end, skeleton)
                     new_pitch = axisDistance(up_end, down_end, skeleton)
-                    if new_yaw != None:
+                    if new_yaw != None and old_yaw != None:
                         #new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
                         #new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
-                        print("send")
+                        #print("send")
                         video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
-                        #video_parent_conn_2.send((old_pitch - new_pitch) * sensitivity_slider.value)
+                        
                         old_yaw = new_yaw
+                        was_closed = True
+
+                    if new_pitch != None and old_pitch != None:
+                        video_parent_conn_2.send((old_pitch - new_pitch) * sensitivity_slider.value)
                         old_pitch = new_pitch
-                        time.sleep(.02)
                         was_closed = True
                         
                 elif is_closed and not was_closed:
-                    new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
-                    new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
+                    new_yaw = axisDistance(left_end, right_end, skeleton)
+                    new_pitch = axisDistance(up_end, down_end, skeleton)
+                    #new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
+                    #new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
                     old_yaw = new_yaw
                     old_pitch = new_pitch
+                    if new_yaw != None and old_yaw != None and new_pitch != None and old_pitch != None:
+                        video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
+                        video_parent_conn_2.send((old_pitch - new_pitch) * sensitivity_slider.value)
+                    time.sleep(.02)
+                    was_closed = True
+                else: 
+                    was_closed = False
+            time.sleep(.01)
+
+def dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+        pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
+        shutdown, sensitivity_slider, recording_name_conn, bone_name_conn):
+    lock = multiprocessing.Lock()
+    while True:
+        time.sleep(2)
+        left_end, right_end = determine_rotation_axis(skeleton)
+            
+        time.sleep(2)
+        up_end, down_end = determine_rotation_axis(skeleton)
+
+        time.sleep(2)
+        closed_fist = StaticMovement(name = "closed", load = False)
+
+            
+        video_parent_conn.send(45.0)
+        time.sleep(1)
+        video_parent_conn.send(45.0)
+        old_yaw = 0.0
+        old_pitch = 0.0
+        frames = 0
+
+        movement1 = StaticMovement(name = "1", load = False)
+            
+        run = False
+        was_closed = False
+        while True:
+            if shutdown.value == 1:
+                return
+            
+            if load_button_pushed.value == 1:
+                load_button_pushed.value = 0
+                return left_end, right_end, up_end, down_end
+
+            if record_button_pushed.value == 1:
+                print("recieved")
+                movement1.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = True, rotation = True, save = False)
+                print(" Done Recording.\n")
+                movement1.rotation_averages_quat = quaternionAverage(movement1.rotations_array_quat)
+                movement1.calculateAngleAverages()
+                    
+                with lock:
+                    record_button_pushed.value = 0
+                run = True
+
+            if save_button_pushed.value == 1:
+                movement1.saveToCSV()
+                pose_name = None
+                while not pose_name:
+                    pose_name = pose_name_conn.recv() # Receiving pose name from pipe
+
+                unique_identifier = None
+                while not unique_identifier:
+                    unique_identifier = identifier_conn.recv() # Receiving pose name from pipe
+                    
+                print(pose_name + "_" + unique_identifier)
+                with lock:
+                    save_button_pushed.value = 0
+
+            if load_button_pushed.value == 1:
+                movement1.loadFromCSV()
+                movement1.rotation_averages_quat = quaternionAverage(movement1.rotations_array_quat)
+                movement1.calculateAngleAverages()
+                with lock:
+                    load_button_pushed.value = 0
+                run = True
+                
+            if run:
+                is_closed = averageRotationComparison(movement1, skeleton)
+                if is_closed and was_closed:
+                    new_yaw = axisDistance(left_end, right_end, skeleton)
+                    
+                    if new_yaw != None:
+                        #new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
+                        #new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
+                        #print("send")
+                        video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
+                        
+                        old_yaw = new_yaw
+                        was_closed = True
+                        
+                elif is_closed and not was_closed:
+                    new_yaw = axisDistance(left_end, right_end, skeleton)
+                    #new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
+                    #new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
+                    old_yaw = new_yaw
+                    
                     video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
-                    #video_parent_conn_2.send((old_pitch - new_pitch) * sensitivity_slider.value)
                     time.sleep(.02)
                     was_closed = True
                 else: 
