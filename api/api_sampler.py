@@ -10,15 +10,26 @@ import multiprocessing as mp
 
 def sampler(skeleton, skeleton_ready, shutdown, bone_name_pipe, sample_rate = .01):
     #Function to sample an api call on a given interval
-    for i in range(500):
-        throw_away = getPose()
     
-    arr = []
-    for i in range(500):
-        arr.append(getPose()['parameters'])
-    active = getActiveBones(arr)
+    active = []
+    rokoko_tries = 0
+    while len(active) != 22:
+        rokoko_tries +=1
+        for i in range(500):
+            throw_away = getPose()
+    
+        arr = []
+        for i in range(500):
+            arr.append(getPose()['parameters'])
+        active = getActiveBones(arr)
+        if rokoko_tries >= 5:
+            shutdown.value = 1
+            raise Exception("Restart Rokoko and tell their developers to get their shit together.")
+    
     bone_names = getPoseDefinition()['parameters']
     active_bone_names = []
+
+
     print("\nActive Bones:\n")
     for i in active:
         active_bone_names.append(bone_names[i-1])
