@@ -43,7 +43,10 @@ def averageRotationComparison(static_movement, skeleton, return_total = False):
         average_quats = static_movement.rotation_averages_quat
     except:
         print("wtf\n\n\n\n\n")
-        return 100
+        if return_total:
+            return 100
+        else:
+            return False
     gesture = True
     i = 0
     if return_total:

@@ -8,6 +8,7 @@ import time
 import multiprocessing
 import string
 from threading import Thread
+from collections import deque
 
 # Internal Files
 from classes.Skeleton import Skeleton
@@ -18,6 +19,8 @@ from Compute.projection_onto_axis import *
 from classes.SignLanguage import SignLanguage
 from classes.MouseController import MouseController
 from pynput.mouse import Button, Controller
+from MouseAndKeyboard.mouse import *
+from MouseAndKeyboard.mouse import *
 
 def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
@@ -34,17 +37,17 @@ def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushe
     print("\nFinger Hierarchies:")
     skeleton.printFingerGroups() 
 
-    mode = 2
+    mode = 3
     if mode == 1:
         mouseControl(skeleton, sensitivity_slider)
     if mode == 2: 
         mouseAndSignLanguage(skeleton, sensitivity_slider, record_button_pushed, recording_name_conn)
     
-    left_end, right_end, up_end, bottom_end = dragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+    left_end, right_end, up_end, bottom_end = videoDragDrop1D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
         shutdown, sensitivity_slider, recording_name_conn, bone_name_conn)
 
-    dragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
+    videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_pushed, load_button_pushed, 
         pose_name_conn, identifier_conn, video_parent_conn, video_parent_conn_2, skeleton_ready, 
         shutdown, sensitivity_slider, recording_name_conn, bone_name_conn, left_end, right_end, up_end, 
         bottom_end)
@@ -85,6 +88,9 @@ def videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_push
             
         run = False
         was_closed = False
+
+        xy_queue = deque(maxlen = 5)
+
         while True:
             if shutdown.value == 1:
                 return
@@ -135,6 +141,8 @@ def videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_push
                         #new_yaw = projection_onto_axis(left_end, right_end, skeleton) -0.5
                         #new_pitch = projection_onto_axis(up_end, down_end, skeleton) -0.5
                         #print("send")
+                        xy_queue.append((new_yaw, new_pitch))
+                        new_yaw, new_pitch = simpleMovingAverage(list(xy_queue), 7)
                         video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
                         
                         old_yaw = new_yaw
@@ -153,6 +161,9 @@ def videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_push
                     old_yaw = new_yaw
                     old_pitch = new_pitch
                     if new_yaw != None and old_yaw != None and new_pitch != None and old_pitch != None:
+                        xy_queue.append((new_yaw, new_pitch))
+                        new_yaw, new_pitch = simpleMovingAverage(list(xy_queue), 7)
+
                         video_parent_conn.send((old_yaw - new_yaw) * sensitivity_slider.value)
                         video_parent_conn_2.send((old_pitch - new_pitch) * sensitivity_slider.value)
                     time.sleep(.02)
@@ -219,7 +230,7 @@ def videoDragDrop1D(skeleton, child_conn, record_button_pushed, save_button_push
                 print(pose_name + "_" + unique_identifier)
                 with lock:
                     save_button_pushed.value = 0
-
+            """
             if load_button_pushed.value == 1:
                 movement1.loadFromCSV()
                 movement1.rotation_averages_quat = quaternionAverage(movement1.rotations_array_quat)
@@ -227,7 +238,7 @@ def videoDragDrop1D(skeleton, child_conn, record_button_pushed, save_button_push
                 with lock:
                     load_button_pushed.value = 0
                 run = True
-                
+            """
             if run:
                 is_closed = averageRotationComparison(movement1, skeleton)
                 if is_closed and was_closed:
@@ -275,20 +286,83 @@ def mouseControl(skeleton, sensitivity_slider):
     print(" Done Recording.\n")
     movement2.rotation_averages_quat = quaternionAverage(movement2.rotations_array_quat)
     movement2.calculateAngleAverages()
+    
+    is_pointer = False
+    is_click = False
+    was_click = False
+
+    #parent, child = multiprocessing.Pipe()
     while True:
-        #print("\nNormalized: ", mouse.getMousePositionAxis())
-        is_pointer = averageRotationComparison(movement1, skeleton)
-        is_click = averageRotationComparison(movement2, skeleton)
-        if is_pointer:
+        
+    
+        is_pointer = averageRotationComparison(movement1, skeleton, return_total = False) 
+        is_click = averageRotationComparison(movement2, skeleton, return_total = False) and not is_pointer
+            
+        """
+        if is_pointer_val < 2.5:
+            is_pointer = True
+        
+        elif is_click < 2.5:
+            is_pointer = False
+            is_click = True
+        
+        else:
+            is_pointer = False
+            is_click = False
+        """
+        if is_pointer and not was_click:
             x, y = mouse.getMousePositionAxis()
-            #print(old_x - x, old_y - y)
-            Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+            if x != None and y != None and old_x != None and old_y != None:
+                Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+                #mouse.move((-(old_x - x), -(old_y - y)), sensitivity_slider.value)
             old_x = x
             old_y = y
             time.sleep(.05)
-        if is_click:
-            Mouse.click(Button.left, 1) 
-            time.sleep(2) 
+        
+        if is_pointer and was_click:
+            Mouse.release(Button.left)
+            x, y = mouse.getMousePositionAxis()
+            if x != None and y != None and old_x != None and old_y != None:
+                Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+                #mouse.move((-(old_x - x), -(old_y - y)), sensitivity_slider.value)
+            old_x = x
+            old_y = y
+            time.sleep(.05)
+        
+        if is_click and not was_click:
+            Mouse.press(Button.left)
+            Mouse.release(Button.left)
+            time.sleep(.1)
+            Mouse.press(Button.left) 
+            x, y = mouse.getMousePositionAxis()
+            if x != None and y != None and old_x != None and old_y != None:
+                Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+                #mouse.move((-(old_x - x), -(old_y - y)), sensitivity_slider.value)
+            old_x = x
+            old_y = y
+            was_click = True
+
+        if is_click and was_click:
+            x, y = mouse.getMousePositionAxis()
+            if x != None and y != None and old_x != None and old_y != None:
+                Mouse.move(-(old_x - x) * 100 * sensitivity_slider.value, -(old_y - y) * 100 * sensitivity_slider.value)
+                #mouse.move((-(old_x - x), -(old_y - y)), sensitivity_slider.value)
+            old_x = x
+            old_y = y
+            was_click = True
+        
+        if was_click and not is_click and not is_pointer:
+            Mouse.release(Button.left)
+            was_click = False
+        
+        if was_click and not is_click and not is_pointer:
+            Mouse.release(Button.left)
+            was_click = False
+
+    
+        
+        
+
 
 def mouseAndSignLanguage(skeleton, sensitivity_slider, record_button_pushed, recording_name_conn):    
     # Function to control mouse pointer with glove

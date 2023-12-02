@@ -8,13 +8,15 @@ import time
 import numpy as np
 from pynput.mouse import Button, Controller
 from scipy.spatial.transform import Rotation as R 
+from collections import deque
 
 # Internal Files
 from classes.StaticMovement import StaticMovement
 from Compute.rotations import *
+from MouseAndKeyboard.mouse import *
 
 class MouseController:
-    def __init__(self, skeleton, screen_x = 900.0, screen_y = 1440.0, load_pointer = False):
+    def __init__(self, skeleton, screen_x = 900.0, screen_y = 1440.0, load_pointer = False, position_queue_length = 5):
         self.skeleton = skeleton
         self.screen_x = screen_x
         self.screen_y = screen_y
@@ -30,6 +32,9 @@ class MouseController:
         self.right_length = None
 
         self.pointer_pose = None
+
+        self.position_queue = deque(maxlen = position_queue_length)
+        self.controller = Controller()
         """
         if load_pointer:
             self.loadPointerPose()
@@ -154,3 +159,8 @@ class MouseController:
         print("\nRight Diagonal Length: ", self.right_diagonal_length)
         print("Left Diagonal Length: ", self.left_diagonal_length)
         print("Above Right Diagonal Angle: ", self.above_diagonal_angle)
+    
+    def move(self, position_change, sensitivity_slider_value):
+        self.position_queue.append(position_change)
+        delta_x, delta_y = simpleMovingAverage(list(self.position_queue), 3)
+        self.controller.move(delta_x * 100 * sensitivity_slider_value, delta_y * 100 * sensitivity_slider_value)

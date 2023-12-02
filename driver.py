@@ -60,6 +60,7 @@ def main():
     COMSUMER_PROCESS.start()
     
     # Video Player
+    
     VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, "beach.mp4", shutdown))
     VIDEO_PROCESS.start()
     video_parent_conn.send("1")
