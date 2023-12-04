@@ -446,6 +446,7 @@ class AppVLC(App):
 
                 new_viewpoint = float(new_viewpoint)
                 self.viewpoint.contents.yaw = new_viewpoint
+                self.player.video_update_viewpoint(self.viewpoint, False)
             #if new_pitch != None:
                 #new_pitch = float(new_pitch)
                 #self.viewpoint.contents.pitch = new_pitch
@@ -454,7 +455,7 @@ class AppVLC(App):
             
             
             #print(self.viewpoint.contents.yaw)
-            self.player.video_update_viewpoint(self.viewpoint, False)
+            #self.player.video_update_viewpoint(self.viewpoint, False)
             frames += 1
             frame_rate = frames/ (time.time() - start_time)
             #print(f'\rfps: {frame_rate}', end='')
@@ -478,16 +479,21 @@ class AppVLC(App):
             if new_pitch != None:
                 new_pitch = float(new_pitch)
                 self.viewpoint.contents.pitch = new_pitch
+                self.player.video_update_viewpoint(self.viewpoint, False)
             #print (new_viewpoint)
             #print(new_viewpoint)
             
             
             #print(self.viewpoint.contents.yaw)
-            self.player.video_update_viewpoint(self.viewpoint, False)
+            
             frames += 1
             frame_rate = frames/ (time.time() - start_time)
             time.sleep(.01)
         
+    def updateViewpoint(self, delay = .03):
+        while True:
+            self.player.video_update_viewpoint(self.viewpoint, False)
+            time.sleep(delay)
 
     def menuPlay_(self, item_or_None):  # PYCHOK expected
         #self.viewpoint.contents.yaw = 0
@@ -511,6 +517,9 @@ class AppVLC(App):
         pitch_thread = threading.Thread(target=self.samplePitch)
         pitch_thread.start()
         print("pitch started")
+
+        update_thread = threading.Thread(target=self.updateViewpoint)
+        #update_thread.start()
         #my_thread.join()
         #sys.exit(0)
 

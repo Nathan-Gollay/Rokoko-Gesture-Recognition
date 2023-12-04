@@ -1,5 +1,6 @@
 from pynput.mouse import Button, Controller
 import time
+from collections import deque
 
 mouse = Controller()
 
@@ -19,7 +20,7 @@ def simpleMovingAverage(deltas, window_size):
 
     return avg_dx, avg_dy
 
-deltas = ((1, 1), (2, 2), (3, 3), (4, 4), (100, 100), (100, 100), )
-window_size = 5
+#deltas = ((1, 1), (2, 2), (3, 3), (4, 4), (100, 100), (100, 100), )
+#window_size = 5
 
-print(simpleMovingAverage(deltas, window_size))
+#print(simpleMovingAverage(deltas, window_size))

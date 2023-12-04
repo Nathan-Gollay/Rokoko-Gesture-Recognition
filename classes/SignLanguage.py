@@ -32,7 +32,7 @@ class SignLanguage:
         if self.load:
             self.load_recordings()
     
-    def runAverageAngleComparison(self, skeleton, push_keys = True):
+    def runAverageAngleComparison(self, skeleton, keyboard_on = None, mouse = False, push_keys = True):
         alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y']
         dir_path = "./Sign_Language_Recordings/" + self.unique_identifier
 
@@ -79,8 +79,19 @@ class SignLanguage:
                     minimum =  total 
                     min_letter = pose.name
             
+            if mouse:
+                if min_letter == '1':
+                    print("keyboard")
+                    push_keys = True
+                    keyboard_on.value = 1
+                elif min_letter == '2':
+                    print("mouse")
+                    keyboard_on.value = 0
+                    push_keys = False
+                    
+
             if push_keys:
-                if minimum < 1.5:
+                if minimum < 1.75 and min_letter != '1':
                     pushKey(min_letter)
                     time.sleep(.8)
                     
@@ -152,11 +163,11 @@ class SignLanguage:
 
 
     def record(self, skeleton, letters = string.ascii_uppercase):
-        recording_path = "./Sign_Language_Recordings/" + self.unique_identifier
+        recording_path = "./Sign_Language_Recordings/" + self.unique_identifier 
         if not os.path.exists(recording_path):
             os.mkdir(recording_path)
         else:
-            print("Provded Unique Identier is already in use. Will overwrite.")
+            print("Provided Unique Identier is already in use. Will overwrite.")
             print("Exit program to avoid!")
         
         for letter in letters:
@@ -166,7 +177,7 @@ class SignLanguage:
                 time.sleep(0.1)
             print("recieved")
             letter_pose.record(skeleton = skeleton, num_seconds = 3, fps = 30, location = False, 
-                rotation = True, save = True, path = recording_path + '/' + self.unique_identifier)
+                rotation = True, save = True, path = recording_path + '/' + self.unique_identifier + '_' + letter)
             print(" Done Recording.\n")
             letter_pose.rotation_averages_quat = quaternionAverage(letter_pose.rotations_array_quat)
             letter_pose.calculateAngleAverages()

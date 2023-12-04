@@ -85,7 +85,7 @@ class StaticMovement:
         quaternions = R.from_euler('xyz', euler_array).as_quat()
         return quaternions
 
-    def record(self, skeleton, num_seconds, fps, location = False, rotation = False, save = False, path = None):
+    def record(self, skeleton, num_seconds, fps, location = False, rotation = True, save = False, path = None):
         # Records Static Pose
 
         if not location and not rotation:

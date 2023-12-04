@@ -14,6 +14,7 @@ from collections import deque
 from classes.StaticMovement import StaticMovement
 from Compute.rotations import *
 from MouseAndKeyboard.mouse import *
+from Compute.projection_onto_axis import *
 
 class MouseController:
     def __init__(self, skeleton, screen_x = 900.0, screen_y = 1440.0, load_pointer = False, position_queue_length = 5):
@@ -101,6 +102,11 @@ class MouseController:
         
         print(" Done Recording.\n")
     
+    def loadCalibration(self):
+        self.upper_left_quat, self.upper_right_quat, self.lower_left_quat, self.lower_right_quat = loadCalibrationFromCSV()
+        #self.calculateIntermediateValues()
+        print("Calibration Loaded")
+
     def calibrateMouse(self):
         pose = StaticMovement(name = "place_holder", load = False)
         print("\nPoint to the upper left corner")

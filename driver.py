@@ -60,11 +60,11 @@ def main():
     COMSUMER_PROCESS.start()
     
     # Video Player
-    
+    """
     VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, "beach.mp4", shutdown))
     VIDEO_PROCESS.start()
     video_parent_conn.send("1")
-    
+    """
     # GUI
     app = QApplication(sys.argv)
     window = SliderDemo(record_button_pushed, save_button_pushed, load_button_pushed, pose_name_parent_conn,
