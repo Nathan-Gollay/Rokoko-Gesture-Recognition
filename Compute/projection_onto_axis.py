@@ -1,6 +1,8 @@
 import time
 from scipy.spatial.transform import Rotation as R
 import csv
+import sys
+import os
 
 from classes.Skeleton import Skeleton
 from classes.StaticMovement import StaticMovement
@@ -81,7 +83,15 @@ def saveCalibrationToCSV(left_end, right_end, up_end, down_end):
             writer.writerow(down_end.as_quat())
 
 def loadCalibrationFromCSV():
-    read_path = "xy_calibration.csv"
+    if getattr(sys, 'frozen', False):
+    # If the application is frozen (bundled)
+        base_path = sys._MEIPASS
+    else:
+    # Normal execution
+        base_path = os.path.dirname(__file__)
+
+    read_path = os.path.join(base_path, 'xy_calibration.csv')
+
     quats = []
     with open(read_path, 'r') as file:
         reader = csv.reader(file)

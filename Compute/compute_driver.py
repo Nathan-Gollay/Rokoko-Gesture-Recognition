@@ -38,7 +38,7 @@ def computePROCESS(skeleton, child_conn, record_button_pushed, save_button_pushe
     print("\nFinger Hierarchies:")
     skeleton.printFingerGroups() 
 
-    mode = 2
+    mode = 4
     if mode == 1:
         mouseControl(skeleton, sensitivity_slider)
     if mode == 2: 
@@ -190,6 +190,14 @@ def videoDragDrop2D(skeleton, child_conn, record_button_pushed, save_button_push
 
                 elif was_closed and not is_closed:
                     print("clear")
+                    momentum_array = getMomentumArray(list(xy_queue))
+                    for pos_change in momentum_array:
+                        new_yaw_change = pos_change[0]
+                        new_pitch_change = pos_change[1]
+                        video_parent_conn.send(new_yaw_change * sensitivity_slider.value)
+                        video_parent_conn_2.send(new_pitch_change * sensitivity_slider.value)
+                        time.sleep(.02)
+
                     xy_queue.clear()
                     was_closed = False
                 else: 

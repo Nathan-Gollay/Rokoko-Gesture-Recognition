@@ -9,6 +9,7 @@ from multiprocessing import Process, Pipe, Array, Lock, Manager, Value
 from multiprocessing.managers import BaseManager
 import subprocess
 import sys
+import os
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QSlider, QLabel
 from PyQt6.QtCore import Qt
 
@@ -17,7 +18,7 @@ from classes.Skeleton import Skeleton
 from Compute.compute_driver import computePROCESS
 from gui.main_window import SliderDemo
 from api.api_sampler import *
-from vlc_player.bindings.python.test import start
+from vlc_player.test import start
 
 
 LOCAL_IP = '127.0.0.1'
@@ -27,6 +28,19 @@ def main():
     #mp.set_start_method('fork') # Needs to be done for compatibility to newer python verions 
     mp.set_start_method('spawn')
     
+
+
+    if getattr(sys, 'frozen', False):
+    # If the application is frozen (bundled)
+        base_path = sys._MEIPASS
+    else:
+    # Normal execution
+        base_path = os.path.dirname(__file__)
+
+    video_path = os.path.join(base_path, 'beach.mp4')
+
+
+
     # Shared memory blocks
     record_button_pushed = Value('i', 0)
     save_button_pushed = Value('i', 0)
@@ -60,11 +74,11 @@ def main():
     COMSUMER_PROCESS.start()
     
     # Video Player
-    """
-    VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, "beach.mp4", shutdown))
+    
+    VIDEO_PROCESS = Process(target=start, args=(video_child_conn, video_child_conn_2, video_path, shutdown))
     VIDEO_PROCESS.start()
     video_parent_conn.send("1")
-    """
+
     # GUI
     app = QApplication(sys.argv)
     window = SliderDemo(record_button_pushed, save_button_pushed, load_button_pushed, pose_name_parent_conn,
@@ -82,6 +96,7 @@ def main():
     sys.exit()
 
 if __name__ == "__main__":
+    mp.freeze_support()
     #BaseManager.register('Skeleton', Skeleton)
     main()
 
